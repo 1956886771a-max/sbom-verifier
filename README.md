@@ -1,2 +1,196 @@
-# sbom-verifier
-A prototype system for SBOM authenticity verification, designed to detect inconsistencies between declared dependencies, generated SBOMs, and actual software artifacts, starting with deep support for the npm ecosystem.
+# SBOM Authenticity Verifier
+
+一个面向软件供应链安全的 SBOM 真实性验证原型系统。  
+本项目旨在检测 **声明依赖、生成的 SBOM 与软件实际组成之间的不一致**，并以 **npm 生态深耕** 作为第一阶段重点。
+
+---
+
+## 项目简介
+
+软件物料清单（SBOM, Software Bill of Materials）正在成为软件供应链透明化的重要基础。  
+然而，现有的签名、证明（attestation）与透明日志机制，更多只能证明：
+
+- 谁生成了 SBOM
+- 该 SBOM 在传输过程中是否被篡改
+
+却**无法直接证明 SBOM 内容本身是否真实反映了实际软件组成**。
+
+因此，本项目聚焦于一个核心问题：
+
+> **SBOM 是否真实、完整、一致地反映了软件的实际依赖与组件结构？**
+
+本项目将尝试构建一个 **SBOM 真实性验证系统原型**，通过对以下多种来源进行交叉验证：
+
+- 项目的声明文件（如 `package.json`、`package-lock.json`）
+- 生成后的 SBOM
+- 实际安装目录或构建产物中的组件信息
+
+从而识别其中的不一致、缺失、版本偏差与潜在异常。
+
+---
+
+## 当前目标
+
+本项目当前以**第一篇 EI 工程型论文**为核心目标，优先完成一个**可发表的最小可行研究系统**。
+
+### 第一阶段聚焦
+- 深入支持 **npm 单生态**
+- 解析声明依赖
+- 生成或读取 SBOM
+- 扫描实际安装依赖
+- 进行差异检测与分类
+- 输出可复现的实验结果
+
+### 当前暂不优先
+- 机器学习增强
+- 多生态深度扩展
+- 复杂前端界面
+- 动态运行时监测
+- 大规模平台化部署
+
+---
+
+## 核心研究问题
+
+本项目重点关注以下问题：
+
+1. **如何定义 SBOM 的真实性？**  
+   即：一个 SBOM 在什么条件下可以被认为真实反映了软件组成？
+
+2. **如何从多个独立来源重建软件的实际依赖结构？**  
+   包括声明文件、SBOM、安装目录、打包产物等。
+
+3. **如何识别并分类 SBOM 与实际软件之间的不一致？**  
+   例如缺失组件、额外组件、版本不一致、正常工程差异等。
+
+4. **如何降低误报，使结果更适合论文实验与工程应用？**
+
+---
+
+## 系统思路
+
+系统整体采用“多源交叉验证”的基本思路：
+
+1. **Manifest 路径**  
+   从 `package.json` / `package-lock.json` 中提取项目声明依赖
+
+2. **SBOM 路径**  
+   通过工具生成或读取现有 SBOM，并解析其中组件信息
+
+3. **Artifact 路径**  
+   从 `node_modules` 或构建产物中提取实际存在的依赖组件
+
+4. **统一规范化与匹配**  
+   对名称、版本、依赖层次进行规范化与对齐
+
+5. **差异检测与分类**  
+   输出各种不一致类型，并尽可能区分正常差异与可疑异常
+
+---
+
+## 第一版计划支持的能力
+
+- [ ] 解析 `package.json`
+- [ ] 解析 `package-lock.json`
+- [ ] 支持从 npm 项目生成 SBOM
+- [ ] 解析 CycloneDX / SPDX 等常见 SBOM 格式
+- [ ] 扫描 `node_modules` 中的实际依赖
+- [ ] 进行基础组件集合比对
+- [ ] 检测版本不一致
+- [ ] 输出差异报告
+- [ ] 支持实验批量运行
+- [ ] 支持基础统计分析
+
+---
+
+## 预期输出
+
+本项目预期产出包括：
+
+- 一个可运行的 SBOM 真实性验证原型系统
+- 一套针对 npm 生态的依赖提取与差异检测流程
+- 一组真实项目上的实验结果
+- 一篇面向 EI 工程型论文的研究论文初稿
+- 后续扩展到多生态、ML 增强和前端展示的基础代码框架
+
+---
+
+## 项目结构（规划中）
+
+```text
+sbom-verifier/
+├─ README.md
+├─ project_scope.md
+├─ requirements.txt
+├─ data/
+│  ├─ samples/
+│  ├─ sboms/
+│  ├─ manifests/
+│  ├─ scans/
+│  └─ reports/
+├─ docs/
+│  ├─ notes/
+│  ├─ design/
+│  └─ paper/
+├─ src/
+│  ├─ parsers/
+│  ├─ scanners/
+│  ├─ normalizers/
+│  ├─ matchers/
+│  ├─ classifiers/
+│  └─ cli/
+├─ tests/
+└─ scripts/
+
+## 技术栈（计划）
+
+**主控层**
+Python
+**生态与样本**
+Node.js / npm
+**可能使用的工具**
+Syft
+Trivy
+CycloneDX 相关工具
+jq
+**计划使用的 Python 库**
+pandas
+pydantic
+networkx
+typer / click
+rich
+pytest
+jsonschema
+
+## 当前开发原则
+
+优先保证论文主体可成立
+优先保证npm 单生态深耕
+优先实现最小可运行闭环
+优先积累实验数据与中间结果
+不因功能扩张影响第一篇论文进度
+
+## 后续扩展方向
+
+在第一篇论文主体完成后，后续可进一步扩展：
+
+多生态支持（PyPI / Maven / Go）
+ML 增强的不一致分类与风险排序
+Web 前端与可视化报告
+CI/CD 集成
+公开实验数据集与 Benchmark 构建
+
+## 当前状态
+
+项目正在启动中，当前优先事项为：
+
+搭建仓库结构
+配置基础环境
+选取首批 npm 样本
+跑通第一条最小验证闭环
+逐步沉淀论文材料与实验脚本
+
+## 备注
+
+本项目目前以研究原型与论文产出为导向，暂不追求完整工业化产品形态。
+后续将根据开发进展决定是否扩展至多生态、智能化增强与平台化展示。
